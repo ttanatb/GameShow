@@ -58,3 +58,6 @@ sysinfo.txt
 # Crashlytics generated file
 crashlytics-build.properties
 
+# Custom folders
+/[Aa]ssets/ThirdParty*
+/[Aa]ssets/Plugins*
