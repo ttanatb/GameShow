@@ -1,0 +1,3 @@
+[submodule "CharTweener"]
+	path = Assets/CharTweener
+	url = git@github.com:ttanatb/CharTweener.git
