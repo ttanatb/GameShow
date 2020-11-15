@@ -11,7 +11,6 @@ namespace UI
     {
         public static readonly HashSet<char> Punctuation = new HashSet<char> { ',', '.', '?', '!' };
         public static readonly HashSet<char> Space = new HashSet<char> { ' ' };
-        public static readonly float PunctuationPauseSec = 0.2f;
     }
 
     public class DialogueModel
@@ -28,31 +27,44 @@ namespace UI
 
 
         private bool m_completedText = false;
-        private bool m_skipToEnd = false;
-        private StringBuilder m_stringBuilder = null;
         private DialogueModel m_dialogueModel = null;
 
-
         [SerializeField]
-        private TextMeshProUGUI m_dialogueText = null;
+        private TextController m_dialogueText = null;
         [SerializeField]
-        private TextMeshProUGUI m_nameText = null;
-
+        private TextController m_nameText = null;
+        [SerializeField]
+        private UnityEngine.UI.Image[] m_renderers = null;
 
         public void SetVisible(bool shouldShow)
         {
-
+            foreach (var img in m_renderers)
+                img.enabled = shouldShow;
+            if (!shouldShow)
+            {
+                m_dialogueText.Clear();
+                m_nameText.Clear();
+            }
         }
 
         public void SetDialogue(string line, string name = "", DialogueModel model = null)
         {
             if (name != "")
-                m_nameText.text = name;
+                m_nameText.DisplayText(name);
 
             if (model != null)
                 m_dialogueModel = model;
 
-            StartCoroutine(DoUpdateText(line, m_stringBuilder));
+            m_completedText = false;
+            m_dialogueText.DisplayText(line, model.IntervalDelaySec, () =>
+            {
+                m_completedText = true;
+            });
+        }
+
+        public void SetDialogueTextModifier(TextModifier modifier)
+        {
+            m_dialogueText.SetTextModifier(modifier);
         }
 
         public void TriggerNextDialogue()
@@ -61,54 +73,54 @@ namespace UI
             {
                 m_yarnDialogueUI.MarkLineComplete();
             }
-            else if (!m_skipToEnd)
+            else
             {
-                m_skipToEnd = true;
+                m_dialogueText.SkipDisplayAnim();
             }
         }
 
         // TODO: might have to adjust this for dotween
-        private IEnumerator DoUpdateText(string text, StringBuilder stringBuilder)
-        {
-            m_completedText = false;
-            m_skipToEnd = false;
+        //private IEnumerator DoUpdateText(string text, StringBuilder stringBuilder)
+        //{
+        //    m_completedText = false;
+        //    m_skipToEnd = false;
 
-            stringBuilder.Clear();
-            foreach (char c in text)
-            {
-                if (m_skipToEnd)
-                {
-                    stringBuilder.Clear();
-                    stringBuilder.Append(text);
-                    m_dialogueText.text = stringBuilder.ToString();
-                    // Rebuild layout maybe?
+        //    stringBuilder.Clear();
+        //    foreach (char c in text)
+        //    {
+        //        if (m_skipToEnd)
+        //        {
+        //            stringBuilder.Clear();
+        //            stringBuilder.Append(text);
+        //            m_dialogueText.text = stringBuilder.ToString();
+        //            // Rebuild layout maybe?
 
-                    break;
-                }
+        //            break;
+        //        }
 
-                stringBuilder.Append(c);
-                m_dialogueText.text = stringBuilder.ToString();
+        //        stringBuilder.Append(c);
+        //        m_dialogueText.text = stringBuilder.ToString();
 
-                // Skip audio for 'space'
-                if (!Constants.Space.Contains(c))
-                    m_audioManager.PlayOneShot(m_dialogueModel.AudioClipName, m_dialogueModel.PitchRange);
+        //        // Skip audio for 'space'
+        //        if (!Constants.Space.Contains(c))
+        //            m_audioManager.PlayOneShot(m_dialogueModel.AudioClipName, m_dialogueModel.PitchRange);
 
-                // Add extra pause for punctuation
-                float pauseSec = m_dialogueModel.IntervalDelaySec;
-                if (Constants.Punctuation.Contains(c))
-                    pauseSec += Constants.PunctuationPauseSec;
+        //        // Add extra pause for punctuation
+        //        float pauseSec = m_dialogueModel.IntervalDelaySec;
+        //        if (Constants.Punctuation.Contains(c))
+        //            pauseSec += Constants.PunctuationPauseSec;
 
-                // TODO: poll for 'skip' call more often
-                yield return new WaitForSeconds(pauseSec);
-            }
+        //        // TODO: poll for 'skip' call more often
+        //        yield return new WaitForSeconds(pauseSec);
+        //    }
 
-            DisplayBlinker();
+        //    DisplayBlinker();
 
-            // TODO: fire event on line completed ?
+        //    // TODO: fire event on line completed ?
 
-            m_completedText = true;
-            yield return null;
-        }
+        //    m_completedText = true;
+        //    yield return null;
+        //}
 
         private void DisplayBlinker()
         {
@@ -119,8 +131,6 @@ namespace UI
         {
             m_audioManager = AudioManager.Instance;
             m_yarnDialogueUI = YarnSingleton.Instance.DialogueUI;
-
-            m_stringBuilder = new StringBuilder();
         }
     }
 }

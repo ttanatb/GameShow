@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using Yarn;
 using Yarn.Unity;
+using DG.Tweening;
 
 public class YarnSingleton : Singleton<YarnSingleton>
 {
@@ -17,5 +18,6 @@ public class YarnSingleton : Singleton<YarnSingleton>
         VariableStorage = GetComponentInChildren<VariableStorage>();
         DialogueUI = GetComponentInChildren<DialogueUI>();
         DialogueRunner = GetComponentInChildren<DialogueRunner>();
+        DOTween.SetTweensCapacity(500, 50);
     }
 }

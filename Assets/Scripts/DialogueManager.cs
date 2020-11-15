@@ -70,6 +70,8 @@ public class DialogueManager : MonoBehaviour
 
         m_dialogueUI.onLineStart.AddListener(OnLineStart);
         m_dialogueUI.onLineUpdate.AddListener(OnLineUpdate);
+
+        m_dialogueController.SetVisible(false);
     }
 
     private void OnDestroy()
@@ -96,12 +98,19 @@ public class DialogueManager : MonoBehaviour
         // Nothing?
     }
 
-    private void OnLineUpdate(string line)
+    private void OnLineUpdate(string rawText)
     {
-        // TODO: work on parsing
+        List<TextModifier> modifiers = new List<TextModifier>();
+
+        DialogueParser.Parse(rawText, out string line, out string name, modifiers);
 
         // TODO: parse line into name, line, and model?
-        m_dialogueController.SetDialogue(line, m_name, m_model);
+        m_dialogueController.SetDialogue(line, name, m_model);
+
+        foreach (var mod in modifiers)
+        {
+            m_dialogueController.SetDialogueTextModifier(mod);
+        }
     }
 
     // Update is called once per frame
